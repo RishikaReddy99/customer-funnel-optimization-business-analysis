@@ -1,0 +1,185 @@
+/*========================================================
+SQL ANALYSIS 1
+Which customer segment abandons carts the most?
+========================================================*/
+SELECT
+    user_type,
+    COUNT(*) AS total_sessions,
+    
+    SUM(CASE
+            WHEN added_to_cart = 1
+            THEN 1
+            ELSE 0
+        END) AS carts_created,
+        
+    SUM(CASE
+            WHEN added_to_cart = 1
+                 AND purchased = 0
+            THEN 1
+            ELSE 0
+        END) AS abandoned_carts,
+        
+    -- Added CONCAT to match your exact expected layout with the % sign
+    CONCAT(
+        ROUND(
+            SUM(CASE
+                    WHEN added_to_cart = 1
+                         AND purchased = 0
+                    THEN 1
+                    ELSE 0
+                END)
+            * 100.0
+            /
+            NULLIF(
+                SUM(CASE
+                        WHEN added_to_cart = 1
+                        THEN 1
+                        ELSE 0
+                    END),
+                0
+            ),
+            2
+        ),
+        '%'
+    ) AS abandonment_rate
+
+FROM ecommerce_db.ecommerce
+
+GROUP BY user_type
+
+ORDER BY abandonment_rate DESC;
+User_type	total_sessions	carts_created	abandoned_carts	abandoned_rate
+0	11218	7254	5173	71.31%
+1	13782	8863	5328	60.12%
+
+
+
+/*========================================================
+SQL ANALYSIS 2
+Which marketing channels perform best?
+========================================================*/
+SELECT
+    marketing_channel,
+    COUNT(*) AS total_sessions,
+    
+    SUM(CASE
+            WHEN purchased = 1
+            THEN 1
+            ELSE 0
+        END) AS purchases,
+
+    CONCAT(
+        ROUND(
+            SUM(CASE WHEN purchased = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*),
+            2
+        ),
+        '%'
+    ) AS conversion_rate,
+
+    ROUND(SUM(revenue), 2) AS total_revenue,
+
+    -- Professional Business Metric: True Revenue Per Session (RPS)
+    ROUND(SUM(revenue) / COUNT(*), 2) AS avg_revenue_per_session
+
+FROM ecommerce_db.ecommerce
+
+GROUP BY marketing_channel
+
+ORDER BY total_revenue DESC;
+
+Marketing_
+channel	total_
+sessions	purchases	conversion_
+rate	total_
+revenue	avg_revenue_
+per_session
+5	4263	1006	23.60%	1820823.79	427.12
+2	4281	943	22.03%	1711962.69	399.9
+3	4116	932	22.64%	1675463.47	407.06
+0	4041	918	22.72%	1661328.76	411.12
+1	4190	927	22.12%	1646768.68	393.02
+4	4106	890	21.66%	1599821.67	389.35
+
+
+/*========================================================
+SQL ANALYSIS 3
+Which Product Categories Generate the Most Revenue?
+========================================================*/
+SELECT
+    product_category,
+    COUNT(*) AS total_transactions,
+    SUM(quantity) AS total_units_sold,
+    
+    -- Option: Added CONCAT to attach the ₹ sign if you want it straight from SQL
+    CONCAT('₹', FORMAT(SUM(CASE WHEN purchased = 1 THEN revenue ELSE 0 END), 0)) AS total_revenue,
+    
+    CONCAT('₹', FORMAT(ROUND(AVG(CASE WHEN purchased = 1 THEN revenue END), 2), 0)) AS avg_order_value
+
+FROM ecommerce_db.ecommerce
+
+GROUP BY product_category
+
+ORDER BY SUM(CASE WHEN purchased = 1 THEN revenue ELSE 0 END) DESC;
+
+product_
+category	total_
+transactions	total_
+units_sold	total_revenue	avg_order_value
+2	3237	8019	â‚¹2,037,577	â‚¹2,826
+6	3112	7765	â‚¹1,930,885	â‚¹2,514
+5	3149	7949	â‚¹1,729,167	â‚¹2,375
+3	3040	7582	â‚¹1,293,650	â‚¹2,050
+7	3073	7688	â‚¹1,089,618	â‚¹1,570
+0	3142	7730	â‚¹880,077	â‚¹1,257
+1	3043	7534	â‚¹702,789	â‚¹1,086
+4	3204	7959	â‚¹452,407	â‚¹622
+
+
+
+/*========================================================
+SQL ANALYSIS 4
+Does Customer Engagement Impact Purchases?
+========================================================*/
+SELECT
+    session_duration_bucket,
+    COUNT(*) AS total_sessions,
+
+    SUM(CASE
+            WHEN purchased = 1
+            THEN 1
+            ELSE 0
+        END) AS purchases,
+
+    CONCAT(
+        ROUND(
+            SUM(CASE
+                    WHEN purchased = 1
+                    THEN 1
+                    ELSE 0
+                END) * 100.0
+            / COUNT(*),
+            2
+        ),
+        '%'
+    ) AS conversion_rate
+
+FROM ecommerce_db.ecommerce
+
+GROUP BY session_duration_bucket
+
+ORDER BY ROUND(SUM(CASE WHEN purchased = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 2) DESC;
+
+session_duration_bucket	total_sessions	purchases	conversion_rate
+Long	6254	1477	23.62%
+Very Long	6240	1449	23.22%
+Short	6236	1421	22.79%
+Very Short	6270	1269	20.24%
+
+
+session_duration_
+bucket	total_sessions	purchases	conversion_rate
+Long	6254	1477	23.62%
+Very Long	6240	6240	23.22%
+Short	6236	1421	22.79%
+Very Short	6270	6270	20.24%
+
