@@ -61,7 +61,7 @@ This project investigates:
 
 ## Dashboard Preview
 
-(Insert dashboard screenshot here)
+[(Insert dashboard screenshot here)](https://github.com/RishikaReddy99/customer-funnel-optimization-business-analysis/blob/06985435b98d63d1d4c0c0a4c31ca743d187ff70/Dashboard/Screenshot%20(533).png)
 
 ---
 
